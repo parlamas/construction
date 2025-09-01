@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Horistics Bookstore — carefully crafted learning materials." />
+  <title>Horistics · Bookstore</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="Horistics home">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span class="brand-text">Horistics</span>
+      </a>
+
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
+      <label for="nav-toggle" class="hamburger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/">horistics</a></li>
+          <li><a href="/consulting">consulting</a></li>
+          <li><a href="/bookstore" aria-current="page">bookstore</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container">
+        <h1>Books that reward re-reading</h1>
+        <p>Foundational concepts, durable definitions, and tools built for teachers and students.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="mailto:horistics@gmail.com">Ask about availability</a>
+          <a class="btn btn-ghost" href="/">Back home</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container grid-3">
+        <article class="card">
+          <h2>The Universal Fundamentals of Grammar</h2>
+          <p>A definition-driven framework for moods, diatheses, aspects, clauses, parts of speech, and syntax.</p>
+        </article>
+        <article class="card">
+          <h2>Mirror Editions</h2>
+          <p>English ⟷ Danish pages in parallel for deep comparative learning.</p>
+        </article>
+        <article class="card">
+          <h2>Soon</h2>
+          <p>E-book PDFs and teaching resources. This is a placeholder page.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="highlight">
+      <div class="container">
+        <h2>Want early access?</h2>
+        <p>Email us to get notified when titles go live.</p>
+        <a class="btn btn-primary" href="mailto:horistics@gmail.com">horistics@gmail.com</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Horistics · Isidoros Parlamas</p>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/consulting">consulting</a></li>
+          <li><a href="/bookstore" aria-current="page">bookstore</a></li>
+          <li><a href="mailto:horistics@gmail.com">contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
