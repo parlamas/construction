@@ -179,43 +179,60 @@ body{
   position: relative; /* so .site-nav can anchor to its bottom on mobile */
 }
 
+/* ....................Mobile navigation behavior (≤ 860px) ...............................*/
+
+/* Ensure header is a positioning context */
+.header-inner {
+  position: relative;
+}
+
 /* Mobile navigation behavior (≤ 860px) */
 @media (max-width: 860px){
-  .grid-3{ grid-template-columns: 1fr }
-  .hamburger{ display:flex }
-
-  /* Hide nav by default on mobile; dropdown opens under header */
-  .site-nav{
-    display: none;               /* hidden until toggled */
-    position: absolute;
-    top: 100%;                   /* sits directly below .header-inner */
-    left: 0; right: 0;
-    background: rgba(11,15,25,.98);
-    border-bottom: 1px solid rgba(255,255,255,.06);
-    z-index: 400;                /* stays below sticky header (z=500) */
+  .grid-3 { grid-template-columns: 1fr }
+  .hamburger {
+    display:flex;
+    cursor:pointer;
+    width:42px; height:42px;
+    align-items:center; justify-content:center;
+    border-radius:.6rem;
   }
 
-  .site-nav ul{ flex-direction: column; gap: 0 }
-  .site-nav li{ border-top: 1px solid rgba(255,255,255,.06) }
-  .site-nav a{ display:block; padding:1rem 1.25rem }
+  /* Hamburger icon lines */
+  .hamburger span {
+    display:block;
+    width:22px; height:2px;
+    background:var(--text);
+    margin:4px 0;
+    transition:transform .2s ease, opacity .2s ease;
+  }
 
-  /* Toggle open via the checkbox */
-  .nav-toggle:checked ~ .site-nav{ display:block }
+  /* Hide nav by default */
+  .site-nav {
+    display:none;
+    position:absolute;
+    top:100%; left:0; right:0;
+    background:rgba(11,15,25,.98);
+    border-bottom:1px solid rgba(255,255,255,.06);
+    z-index:400;
+  }
 
-  /* Animate hamburger into an X */
+  .site-nav ul { flex-direction:column; gap:0 }
+  .site-nav li { border-top:1px solid rgba(255,255,255,.06) }
+  .site-nav a { display:block; padding:1rem 1.25rem }
+
+  /* Toggle open */
+  .nav-toggle:checked ~ .site-nav { display:block }
+
+  /* Animate hamburger to X */
   .nav-toggle:checked + .hamburger span:nth-child(1){ transform: translateY(6px) rotate(45deg) }
-  .nav-toggle:checked + .hamburger span:nth-child(2){ opacity: 0 }
+  .nav-toggle:checked + .hamburger span:nth-child(2){ opacity:0 }
   .nav-toggle:checked + .hamburger span:nth-child(3){ transform: translateY(-6px) rotate(-45deg) }
 }
 
-/* iPhone-sized tweaks (≤ 600px): extra breathing room + slightly larger brand */
+/* iPhone tweaks */
 @media (max-width: 600px){
-  .site-header{
-    padding: 2rem 0; /* your requested space above/below brand */
-  }
-  .brand-text{
-    font-size: 1.25rem; /* subtle bump for readability */
-  }
+  .site-header { padding:2rem 0 }
+  .brand-text { font-size:1.25rem }
 }
 
 
