@@ -237,3 +237,34 @@ body{
 
 
 
+/*............after..................*/
+
+/* Robust hamburger: draw 3 bars even if spans get altered */
+.hamburger{
+  position:relative;
+}
+.hamburger::before,
+.hamburger::after{
+  content:"";
+  position:absolute; left:50%;
+  width:22px; height:2px; background:var(--text);
+  transform:translateX(-50%);
+}
+.hamburger::before{ top: calc(50% - 6px); }
+.hamburger::after{  top: calc(50% + 6px); }
+
+/* Keep the middle bar as the <span> you already style */
+.hamburger span{
+  position:absolute; left:50%; top:50%;
+  transform:translateX(-50%);
+}
+
+/* Animate to X when open */
+@media (max-width: 860px){
+  .nav-toggle:checked + .hamburger::before{ opacity:0; }
+  .nav-toggle:checked + .hamburger span{ transform: translateX(-50%) rotate(45deg); }
+  .nav-toggle:checked + .hamburger::after{
+    top:50%;
+    transform:translateX(-50%) rotate(-45deg);
+  }
+}
