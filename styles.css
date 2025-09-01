@@ -179,99 +179,74 @@ body{
   position: relative; /* so .site-nav can anchor to its bottom on mobile */
 }
 
-/* ....................Mobile navigation behavior (≤ 860px) ...............................*/
 
-/* Ensure header is a positioning context */
+/* ..............-------- Mobile navigation behavior (≤ 860px) --------................ */
+
+/* Ensure header is a positioning context for the dropdown */
 .header-inner {
   position: relative;
 }
 
-/* Mobile navigation behavior (≤ 860px) */
+/* Base hamburger (3 spans, absolutely positioned) */
+.hamburger {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  width: 42px; height: 42px;
+  align-items: center; justify-content: center;
+  border-radius: .6rem;
+}
+
+/* The three bars */
+.hamburger span {
+  position: absolute;
+  left: 50%;
+  width: 22px; height: 2px;
+  background: var(--text);
+  transform: translateX(-50%);
+  transition: transform .2s ease, opacity .2s ease, top .2s ease;
+}
+.hamburger span:nth-child(1) { top: calc(50% - 6px); } /* top bar   */
+.hamburger span:nth-child(2) { top: 50%; }             /* middle    */
+.hamburger span:nth-child(3) { top: calc(50% + 6px); } /* bottom    */
+
 @media (max-width: 860px){
   .grid-3 { grid-template-columns: 1fr }
-  .hamburger {
-    display:flex;
-    cursor:pointer;
-    width:42px; height:42px;
-    align-items:center; justify-content:center;
-    border-radius:.6rem;
-  }
+  .hamburger { display: flex; }
 
-  /* Hamburger icon lines */
-  .hamburger span {
-    display:block;
-    width:22px; height:2px;
-    background:var(--text);
-    margin:4px 0;
-    transition:transform .2s ease, opacity .2s ease;
-  }
-
-  /* Hide nav by default */
+  /* Hide nav by default; drop it below the header */
   .site-nav {
-    display:none;
-    position:absolute;
-    top:100%; left:0; right:0;
-    background:rgba(11,15,25,.98);
-    border-bottom:1px solid rgba(255,255,255,.06);
-    z-index:400;
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: rgba(11,15,25,.98);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    z-index: 400;
   }
 
-  /* iPhone tweaks */
-@media (max-width: 600px){
-  .site-header { padding:2rem 0 }
-  .brand-text { font-size:1.25rem }
-} /* ← you were missing this */
-
-
-  .site-nav ul { flex-direction:column; gap:0 }
-  .site-nav li { border-top:1px solid rgba(255,255,255,.06) }
-  .site-nav a { display:block; padding:1rem 1.25rem }
+  .site-nav ul { flex-direction: column; gap: 0 }
+  .site-nav li { border-top: 1px solid rgba(255,255,255,.06) }
+  .site-nav a  { display: block; padding: 1rem 1.25rem }
 
   /* Toggle open */
-  .nav-toggle:checked ~ .site-nav { display:block }
+  .nav-toggle:checked ~ .site-nav { display: block; }
 
   /* Animate hamburger to X */
-  .nav-toggle:checked + .hamburger span:nth-child(1){ transform: translateY(6px) rotate(45deg) }
-  .nav-toggle:checked + .hamburger span:nth-child(2){ opacity:0 }
-  .nav-toggle:checked + .hamburger span:nth-child(3){ transform: translateY(-6px) rotate(-45deg) }
+  .nav-toggle:checked + .hamburger span:nth-child(1){
+    transform: translateX(-50%) rotate(45deg);
+    top: 50%;
+  }
+  .nav-toggle:checked + .hamburger span:nth-child(2){
+    opacity: 0;
+  }
+  .nav-toggle:checked + .hamburger span:nth-child(3){
+    transform: translateX(-50%) rotate(-45deg);
+    top: 50%;
+  }
 }
 
 /* iPhone tweaks */
 @media (max-width: 600px){
-  .site-header { padding:2rem 0 }
-  .brand-text { font-size:1.25rem }
-}
-
-
-
-/*............after..................*/
-
-/* Robust hamburger: draw 3 bars even if spans get altered */
-.hamburger{
-  position:relative;
-}
-.hamburger::before,
-.hamburger::after{
-  content:"";
-  position:absolute; left:50%;
-  width:22px; height:2px; background:var(--text);
-  transform:translateX(-50%);
-}
-.hamburger::before{ top: calc(50% - 6px); }
-.hamburger::after{  top: calc(50% + 6px); }
-
-/* Keep the middle bar as the <span> you already style */
-.hamburger span{
-  position:absolute; left:50%; top:50%;
-  transform:translateX(-50%);
-}
-
-/* Animate to X when open */
-@media (max-width: 860px){
-  .nav-toggle:checked + .hamburger::before{ opacity:0; }
-  .nav-toggle:checked + .hamburger span{ transform: translateX(-50%) rotate(45deg); }
-  .nav-toggle:checked + .hamburger::after{
-    top:50%;
-    transform:translateX(-50%) rotate(-45deg);
-  }
+  .site-header { padding: 2rem 0; }
+  .brand-text  { font-size: 1.25rem; }
 }
