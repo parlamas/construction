@@ -164,15 +164,59 @@ body{
   .nav-toggle:checked + .hamburger span:nth-child(3){ transform: translateY(-6px) rotate(-45deg) }
 }
 
-/* Motion preference */
+/* Keep your motion preference block */
 @media (prefers-reduced-motion: reduce){
-  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
-}
-
-@media (max-width: 600px){
-  .site-header{
-    padding: 2rem 0; /* more space above/below brand on iPhone */
+  *{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
   }
 }
+
+/* Ensure header is a positioning context for the dropdown */
+.header-inner{
+  position: relative; /* so .site-nav can anchor to its bottom on mobile */
+}
+
+/* Mobile navigation behavior (≤ 860px) */
+@media (max-width: 860px){
+  .grid-3{ grid-template-columns: 1fr }
+  .hamburger{ display:flex }
+
+  /* Hide nav by default on mobile; dropdown opens under header */
+  .site-nav{
+    display: none;               /* hidden until toggled */
+    position: absolute;
+    top: 100%;                   /* sits directly below .header-inner */
+    left: 0; right: 0;
+    background: rgba(11,15,25,.98);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    z-index: 400;                /* stays below sticky header (z=500) */
+  }
+
+  .site-nav ul{ flex-direction: column; gap: 0 }
+  .site-nav li{ border-top: 1px solid rgba(255,255,255,.06) }
+  .site-nav a{ display:block; padding:1rem 1.25rem }
+
+  /* Toggle open via the checkbox */
+  .nav-toggle:checked ~ .site-nav{ display:block }
+
+  /* Animate hamburger into an X */
+  .nav-toggle:checked + .hamburger span:nth-child(1){ transform: translateY(6px) rotate(45deg) }
+  .nav-toggle:checked + .hamburger span:nth-child(2){ opacity: 0 }
+  .nav-toggle:checked + .hamburger span:nth-child(3){ transform: translateY(-6px) rotate(-45deg) }
+}
+
+/* iPhone-sized tweaks (≤ 600px): extra breathing room + slightly larger brand */
+@media (max-width: 600px){
+  .site-header{
+    padding: 2rem 0; /* your requested space above/below brand */
+  }
+  .brand-text{
+    font-size: 1.25rem; /* subtle bump for readability */
+  }
+}
+
 
 
