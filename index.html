@@ -99,20 +99,6 @@
     // Accessible small enhancement: current year
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
-  <script>
-  (function () {
-    var links = document.querySelectorAll('.email-link');
-    for (var i=0; i<links.length; i++) {
-      var el = links[i];
-      var u = el.getAttribute('data-user');
-      var d = el.getAttribute('data-domain');
-      var s = encodeURIComponent(el.getAttribute('data-subject') || '');
-      var b = el.getAttribute('data-body') || '';
-      var href = 'mailto:' + u + '@' + d + (s ? ('?subject=' + s) : '') + (b ? (s ? '&' : '?') + 'body=' + b : '');
-      el.setAttribute('href', href);
-      el.setAttribute('rel', 'nofollow'); // tiny extra hint
-    }
-  })();
-</script>
+  <script src="/script.js"></script>
 </body>
 </html>
