@@ -2,24 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="robots" content="noindex,nofollow">
-  <title>horistics.com — Under Construction</title>
-  <style>
-    html,body{height:100%;margin:0}
-    body{display:flex;align-items:center;justify-content:center;font-family:system-ui,Arial,sans-serif;background:#0b0f19;color:#fff}
-    .card{padding:2.5rem 2rem;text-align:center;border-radius:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(6px)}
-    h1{margin:0 0 .5rem;font-size:1.8rem}
-    p{margin:.25rem 0 .75rem;opacity:.85}
-    small{opacity:.6}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Horistics — consulting and bookstore. Clarity, rigor, and beautiful learning tools." />
+  <title>Horistics</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="card">
-    <h1>🚧 Under Construction</h1>
-    <p>horistics.com is getting a makeover.</p>
-    <small>Check back soon.</small><p>
-      <small>horistics@gmail.com<br>Isidoros Parlamas</small>
-  </div>
+  <!-- Skip link for keyboard users -->
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="Horistics home">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span class="brand-text">Horistics</span>
+      </a>
+
+      <!-- Mobile menu toggle (no JS) -->
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
+      <label for="nav-toggle" class="hamburger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/" aria-current="page">horistics</a></li>
+          <li><a href="/consulting">consulting</a></li>
+          <li><a href="/bookstore">bookstore</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container">
+        <h1>Think clearly. Build precisely.</h1>
+        <p>Horistics brings rigorous thinking to real problems — through consulting and carefully crafted learning materials.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/consulting">Explore consulting</a>
+          <a class="btn btn-ghost" href="/bookstore">Visit the bookstore</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container grid-3">
+        <article class="card">
+          <h2>Clear frameworks</h2>
+          <p>Well-defined concepts, crisp diagnostics, and decisions that hold under scrutiny.</p>
+        </article>
+        <article class="card">
+          <h2>Actionable advice</h2>
+          <p>We translate complexity into steps you can execute this week — not someday.</p>
+        </article>
+        <article class="card">
+          <h2>Crafted resources</h2>
+          <p>Books and tools designed for durability, readability, and truth-seeking.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="highlight">
+      <div class="container">
+        <h2>Start with a conversation</h2>
+        <p>Tell us about your problem space. We’ll map it, stress-test assumptions, and propose a route forward.</p>
+        <a class="btn btn-primary" href="mailto:horistics@gmail.com">Contact: horistics@gmail.com</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Horistics · Isidoros Parlamas</p>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/consulting">consulting</a></li>
+          <li><a href="/bookstore">bookstore</a></li>
+          <li><a href="mailto:horistics@gmail.com">contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // Accessible small enhancement: current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
