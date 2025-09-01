@@ -169,3 +169,10 @@ body{
   *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
 }
 
+@media (max-width: 600px){
+  .site-header{
+    padding: 0.75rem 0; /* more space above/below brand on iPhone */
+  }
+}
+
+
