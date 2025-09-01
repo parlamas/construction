@@ -65,8 +65,11 @@
       <div class="container">
         <h2>Want early access?</h2>
         <p>Email us to get notified when titles go live.</p>
-        <a class="btn btn-primary"
-   href="mailto:horistics@gmail.com?subject=Bookstore%20Inquiry&body=Hello%20Isidoros,%0D%0A%0D%0AI'd%20like%20to%20ask%20about%20books%20from%20the%20Horistics%20Bookstore.%0D%0A%0D%0AThank%20you.">
+        <a class="btn btn-primary email-link"
+   data-user="horistics"
+   data-domain="gmail.com"
+   data-subject="Consulting Inquiry"
+   data-body="Hello Isidoros,%0D%0A%0D%0AI'd like to discuss consulting with Horistics.%0D%0A%0D%0AThank you.">
   horistics@gmail.com
 </a>
       </div>
@@ -81,9 +84,13 @@
           <li><a href="/consulting">consulting</a></li>
           <li><a href="/bookstore" aria-current="page">bookstore</a></li>
           <li><li>
-  <a href="mailto:horistics@gmail.com?subject=General%20Inquiry&body=Hello%20Isidoros,%0D%0A%0D%0AI%20have%20a%20question%20about%20Horistics.%0D%0A%0D%0AThank%20you.">
-    contact
-  </a>
+  <a class="btn btn-primary email-link"
+   data-user="horistics"
+   data-domain="gmail.com"
+   data-subject="Consulting Inquiry"
+   data-body="Hello Isidoros,%0D%0A%0D%0AI'd like to discuss consulting with Horistics.%0D%0A%0D%0AThank you.">
+  contact
+</a>
 </li>
         </ul>
       </nav>
@@ -91,5 +98,21 @@
   </footer>
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script>
+  (function () {
+    var links = document.querySelectorAll('.email-link');
+    for (var i=0; i<links.length; i++) {
+      var el = links[i];
+      var u = el.getAttribute('data-user');
+      var d = el.getAttribute('data-domain');
+      var s = encodeURIComponent(el.getAttribute('data-subject') || '');
+      var b = el.getAttribute('data-body') || '';
+      var href = 'mailto:' + u + '@' + d + (s ? ('?subject=' + s) : '') + (b ? (s ? '&' : '?') + 'body=' + b : '');
+      el.setAttribute('href', href);
+      el.setAttribute('rel', 'nofollow'); // tiny extra hint
+    }
+  })();
+</script>
+
 </body>
 </html>
