@@ -216,6 +216,13 @@ body{
     z-index:400;
   }
 
+  /* iPhone tweaks */
+@media (max-width: 600px){
+  .site-header { padding:2rem 0 }
+  .brand-text { font-size:1.25rem }
+} /* ← you were missing this */
+
+
   .site-nav ul { flex-direction:column; gap:0 }
   .site-nav li { border-top:1px solid rgba(255,255,255,.06) }
   .site-nav a { display:block; padding:1rem 1.25rem }
