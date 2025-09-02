@@ -179,6 +179,22 @@ body{
   position: relative; /* so .site-nav can anchor to its bottom on mobile */
 }
 
+/* Default (desktop/tablet): gold h3 */
+  .responsive-heading {
+    color: gold;
+    text-align: center;
+    font-size: 1.75em; /* standard h3 size */
+    margin: 0.5em 0;
+  }
+
+  /* On small screens, make it look like an h4 */
+  @media (max-width: 600px) {
+    .responsive-heading {
+      font-size: 1.5em; /* h4 size */
+    }
+  }
+
+
 
 /* ..............-------- Mobile navigation behavior (≤ 860px) --------................ */
 
