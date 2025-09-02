@@ -266,3 +266,13 @@ body{
   .site-header { padding: 1.2rem 0; }
   .brand-text  { font-size: 1.25rem; }
 }
+
+/* Responsive, conflict-proof heading (auto-scales) */
+.card .responsive-heading {
+  color: gold;
+  text-align: center;
+  /* clamp(min, preferred, max): smaller on phones, larger on desktop */
+  font-size: clamp(1.25rem, 4.5vw, 1.75rem) !important;
+  margin: 0.5em 0;
+}
+
