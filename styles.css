@@ -268,12 +268,23 @@ body{
   .brand-text  { font-size: 1.25rem; }
 }
 
-/* Responsive, conflict-proof heading (auto-scales) */
-.card .responsive-heading {
+
+
+
+/* Responsive book title — specific enough to beat .card h3 */
+.card h3.responsive-heading {
   color: gold;
   text-align: center;
-  /* clamp(min, preferred, max): smaller on phones, larger on desktop */
-  font-size: clamp(1.25rem, 4.5vw, 1.75rem) !important;
   margin: 0.5em 0;
+  font-size: 1.75em; /* desktop/tablet */
 }
+
+/* Smaller on phones */
+@media (max-width: 600px) {
+  .card h3.responsive-heading {
+    font-size: 1.5em !important; /* force mobile size */
+    line-height: 1.2;
+  }
+}
+
 
