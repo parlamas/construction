@@ -282,7 +282,7 @@ body{
 /* Smaller on phones */
 @media (max-width: 600px) {
   .card h3.responsive-heading {
-    font-size: 1.5em !important; /* force mobile size */
+    font-size: 1em !important; /* force mobile size */
     line-height: 1.2;
   }
 }
