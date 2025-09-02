@@ -187,6 +187,7 @@ body{
     margin: 0.5em 0;
   }
 
+
   /* On small screens, make it look like an h4 */
   @media (max-width: 600px) {
     .responsive-heading {
