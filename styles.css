@@ -190,7 +190,7 @@ body{
   /* On small screens, make it look like an h4 */
   @media (max-width: 600px) {
     .responsive-heading {
-      font-size: 1.5em; /* h4 size */
+      font-size: 1.5em !important; /* h4 size */
     }
   }
 
