@@ -120,6 +120,26 @@ body{
 .card h2{ margin:.2rem 0 .4rem; font-size:1.2rem }
 .card p{ margin:0; color:var(--muted) }
 
+.card1 {
+  background: red; /* or use a hex like #ff0000 */
+  border: 1px solid gold; /* optional: gold border to match text */
+  border-radius: 1rem;
+  padding: 1.25rem;
+  color: gold; /* sets default text color for the card */
+}
+
+.card1 h2 {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 1.2rem;
+  color: gold; /* ensures headings are gold */
+}
+
+.card1 p {
+  margin: 0;
+  color: gold; /* makes paragraph text gold */
+}
+
+
 /* Highlight section */
 .highlight{
   padding: 2.75rem 0 3.25rem;
