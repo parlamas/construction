@@ -126,7 +126,6 @@ body{
   border-radius: 1rem;
   padding: .5rem;
   color: gold; /* sets default text color for the card */
-  text-decoration:none;
 }
 
 .card1 h2 {
