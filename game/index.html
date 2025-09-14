@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vanilla JS Quiz</title>
+<style>
+  :root{
+    --bg:#ffffff; --card:#fff; --text:#000; --muted:#6b7280; --line:#e5e7eb;
+    --btn:#f9fafb; --good:#10b981; --good-line:#059669; --bad:#ef4444; --bad-line:#dc2626;
+    --accent:#3b82f6; --badge:#f3f4f6; --badge-text:#111827; --good-text:#16a34a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    color:var(--text);
+  }
+  .container{
+    max-width:720px; margin:32px auto; padding:16px;
+    border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05); background:var(--card);
+  }
+  .header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+  }
+  .counter{ font-size:14px; color:var(--muted); font-weight:600; }
+  .question{
+    font-size:22px; font-weight:700; margin-bottom:16px; text-align:center;
+  }
+  .term{ color:#8b4513; }
+  .grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;
+  }
+  .option{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    border-radius:10px; border:1px solid var(--line);
+    background:var(--btn); color:var(--text);
+    cursor:pointer; user-select:none;
+    transition:transform 80ms ease, background 150ms ease, border 150ms ease, color 150ms ease;
+  }
+  .option[aria-disabled="true"]{ cursor:default }
+  .option:active{ transform:scale(.99) }
+  .badge{
+    font-weight:800; font-size:13px; line-height:1; padding:6px 8px; border-radius:8px;
+    background:var(--badge); min-width:26px; text-align:center; border:1px solid transparent;
+  }
+  /* state styles applied via classes */
+  .is-correct{ background:var(--good)!important; border-color:var(--good-line)!important; color:#fff!important; }
+  .is-wrong { background:var(--bad)!important;  border-color:var(--bad-line)!important;  color:#fff!important; }
+  .badge-correct{ color:var(--good-text)!important; border-color:var(--good-text)!important; }
+  .bar-wrap{
+    position:relative; height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; margin-top:16px;
+  }
+  .bar{
+    position:absolute; left:0; top:0; bottom:0; width:100%; background:var(--accent);
+    transition:width 100ms linear;
+  }
+  .footer{ margin-top:12px; font-size:14px; color:var(--muted); }
+  .reveal{ margin-top:12px; font-size:16px; font-weight:600; }
+  @media (max-width:540px){ .grid{ grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+  <div class="container" role="region" aria-labelledby="q-text">
+    <div class="header">
+      <div></div>
+      <div class="counter" id="counter">1 of 10</div>
+      <button id="restart" aria-label="Restart quiz" style="visibility:hidden;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer">Restart</button>
+    </div>
+
+    <div class="question" id="q-text">
+      What is the definition of <span class="term" id="term">…</span>?
+    </div>
+
+    <div class="grid" id="options"></div>
+
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+    <div class="footer" id="footer"></div>
+
+    <div class="reveal" id="reveal" hidden>
+      After 10 sec: <span style="color: var(--good)"><span id="reveal-letter">A</span></span>
+    </div>
+  </div>
+
+<script>
+  // ---- Config ----
+  const totalQuestions = 10;
+  const runQuestions = 2;
+  const questionDurationMs = 10_000;  // 10s
+  const delayAfterRevealMs = 3_000;   // +3s
+
+  /** @typedef {"A"|"B"|"C"|"D"} OptionKey */
+  /** @type {{term:string; options:Record<OptionKey,string>; correct:OptionKey}[]} */
+  const questions = [
+    {
+      term: "admiration",
+      options: { A: "bla bla", B: "blu blu", C: "ble ble", D: "blo blo" },
+      correct: "C",
+    },
+    {
+      term: "justice",
+      options: {
+        A: "fairness in distribution and treatment",
+        B: "randomness in outcomes",
+        C: "unquestioned obedience to authority",
+        D: "absence of conflict",
+      },
+      correct: "A",
+    },
+  ];
+
+  // ---- State ----
+  let qIndex = 0;
+  let selected = /** @type {OptionKey|null} */ (null);
+  let locked = false;
+  let startedAt = Date.now();
+  let now = Date.now();
+  let rafId = 0;
+  let advanceTimeoutId = 0;
+
+  // ---- Elements ----
+  const $counter = document.getElementById("counter");
+  const $term = document.getElementById("term");
+  const $opts = document.getElementById("options");
+  const $bar = document.getElementById("bar");
+  const $footer = document.getElementById("footer");
+  const $reveal = document.getElementById("reveal");
+  const $revealLetter = document.getElementById("reveal-letter");
+  const $restart = document.getElementById("restart");
+
+  $restart.addEventListener("click", () => restart());
+
+  // ---- Helpers ----
+  const active = () => questions[Math.min(qIndex, questions.length - 1)];
+  const humanIndex = () => Math.min(qIndex, totalQuestions - 1) + 1;
+
+  function tick(){
+    now = Date.now();
+    const elapsed = Math.min(now - startedAt, questionDurationMs);
+    const progress = 1 - elapsed / questionDurationMs;
+    $bar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
+
+    if (elapsed >= questionDurationMs && !locked) {
+      lockQuestion();
+    } else if (!locked) {
+      rafId = requestAnimationFrame(tick);
+    }
+    // footer
+    const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
+    $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
+  }
+
+  function lockQuestion(){
+    locked = true;
+    renderOptions(); // apply correct/wrong classes
+    $reveal.hidden = false;
+    $revealLetter.textContent = active().correct;
+    maybeAutoAdvance();
+  }
+
+  function maybeAutoAdvance(){
+    if (qIndex + 1 < runQuestions){
+      clearTimeout(advanceTimeoutId);
+      advanceTimeoutId = setTimeout(() => {
+        qIndex += 1;
+        startQuestion();
+      }, delayAfterRevealMs);
+    } else {
+      // finished the run
+      $restart.style.visibility = "visible";
+    }
+  }
+
+  function handlePick(key){
+    if (locked) return;
+    selected = key;
+    // (no immediate visual change until lock; matches original behavior)
+  }
+
+  function renderOptions(){
+    const act = active();
+    $opts.innerHTML = "";
+    /** @type {OptionKey[]} */
+    (["A","B","C","D"]).forEach((k) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.setAttribute("data-key", k);
+      btn.setAttribute("aria-disabled", locked ? "true" : "false");
+      btn.addEventListener("click", () => handlePick(k));
+
+      // badge
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = `${k}.`;
+
+      // text
+      const txt = document.createElement("span");
+      txt.style.fontSize = "15px";
+      txt.textContent = act.options[k];
+
+      // state styling (after locked)
+      if (locked && k === act.correct){
+        btn.classList.add("is-correct");
+        badge.classList.add("badge-correct");
+      }
+      const isWrongSel = locked && selected === k && k !== act.correct;
+      if (isWrongSel){
+        btn.classList.add("is-wrong");
+      }
+
+      btn.appendChild(badge);
+      btn.appendChild(txt);
+      $opts.appendChild(btn);
+    });
+  }
+
+  function startQuestion(){
+    // cleanup timers
+    cancelAnimationFrame(rafId);
+    clearTimeout(advanceTimeoutId);
+
+    // reset state
+    selected = null;
+    locked = false;
+    startedAt = Date.now();
+    now = startedAt;
+
+    // render
+    $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
+    $term.textContent = active().term;
+    $reveal.hidden = true;
+    $revealLetter.textContent = active().correct;
+    $restart.style.visibility = "hidden";
+    renderOptions();
+
+    // start timer loop
+    $bar.style.width = "100%";
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function restart(){
+    qIndex = 0;
+    startQuestion();
+  }
+
+  // init
+  startQuestion();
+</script>
+</body>
+</html>
