@@ -169,7 +169,7 @@
 
 <script>
   // ---- Config ----
-  const totalQuestions = 10;
+  const totalQuestions = 12;
   const runQuestions = 10;
   const questionDurationMs = 10_000;  // 10s
   const delayAfterRevealMs = 3_000;   // +3s
@@ -277,6 +277,26 @@
       },
       correct: "D",
     },
+    {
+      term: "voice (in grammar)",
+      options: { 
+        A: "In grammar, voice is a verbal category that indicates the relationship between the subject of a sentence and the action expressed by the verb. It shows whether the grammatical subject is performing the action, receiving it, or has some other relationship to it. (anthropic)", 
+        B: "Voice is a grammatical category that describes the relationship between the action expressed by the verb and the participants identified by its arguments (typically the subject and object). It indicates whether the subject of the sentence is performing the action or receiving the action. (deepseek)", 
+        C: "Voice is the grammatical coding of diathesis—a system that maps participants’ semantic roles (agent, patient, etc.) onto syntactic functions (subject, object), potentially altering argument structure (promotion, demotion, suppression) and associated case/agreement. (chatGPT 5)", 
+        D: "Voice is a morphological category of the verb that belongs to a dedicated grammatical system for providing form to diathesis. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "communism",
+      options: { 
+        A: "Communism is a political and economic theory that advocates for a classless, stateless society where the means of production are collectively owned and goods are distributed according to need rather than ability to pay. (anthropic)", 
+        B: "Communism is a political and economic ideology that advocates for a classless, stateless, and moneyless society structured upon common ownership of the means of production (factories, land, resources, etc.) and the principle of 'from each according to his ability, to each according to his needs.' (deepseek)",
+        C: "A political–economic doctrine aiming at a classless, stateless society in which the means of production are commonly owned and goods are allocated by need rather than markets. (chatGPT 5)", 
+        D: "Communism is every single citizen having equal access to the economic resources in a given political entity. (horistics)"
+      },
+      correct: "D",
+    },
   ];
 
 
@@ -301,16 +321,18 @@ const $restart = document.getElementById("restart");
 
 // NEW: one shared comment per definition (question)
 const defComments = {
-  0: "Admiration: D captures the contemplative pause; maybe use 'take in' instead of 'fathom' for learners.",
-  1: "Respect: D is crisp but negative; perhaps 'refusing to violate others’ dignity/boundaries'.",
-  2: "Right (adj.): D frames 'right' as logically survivable—good for correctness; note moral vs factual senses.",
-  3: "Horizon: 'panoramic limit' is vivid; consider 'apparent limit of sight (and understanding)'.",
-  4: "Number: 'quantitative dimension of classes' is philosophical—maybe 'of sets/categories' for clarity.",
-  5: "Politics: Normative ideal—'undertaking of actions that harm no one' in collective decision-making.",
-  6: "Politicking: Strong; perhaps 'often at the public’s expense' to allow borderline cases.",
-  7: "Mood (grammar): Define by speaker’s aim; add quick examples (indicative/imperative).",
-  8: "Diathesis (grammar): 'Trajectory of energy' works; include active/middle/passive examples.",
-  9: "Logic: Add 'valid inference preserves truth from premises to conclusion' to complement contradiction removal."
+  0: "Admiration...",
+  1: "Respect...",
+  2: "Right (adj.)...",
+  3: "Horizon...",
+  4: "Number...",
+  5: "Politics...",
+  6: "Politicking...",
+  7: "Mood (grammar)...",
+  8: "Diathesis and voice are distinct and unrelated concepts. In grammar books, “voice” is often used to mean diathesis. Among contemporary languages, only Greek has voices; others do not, though all have diatheses—a language-independent concept. This confusion stems from widespread sciolism in the academic community. Diatheses refer to energy distribution in the clause; voices refer to systems of distinct verb endings or changes of the stem of verbs. In other words, it concerns systems of distinct spelling to reflect the different diatheses, something that we find only in Greek.",
+  9: "Logic...",
+  10: "A handful of distinct verb forms does not constitute a dedicated system. Online, sciolism is rife—a copy-and-paste culture.",
+  11: "Communism is a noble idea, and no one could successfully argue against it. There is no excuse for some people to have more access to economic resources than others. By contrast, Leninism, Stalinism, and Sovietism are thuggish and tyrannical, and could not be further from communism."
 };
 const $defComment = document.getElementById("def-comment");
 if ($defComment) {
