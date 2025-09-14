@@ -300,7 +300,18 @@ const $revealLetter = document.getElementById("reveal-letter");
 const $restart = document.getElementById("restart");
 
 // NEW: one shared comment per definition (question)
-const defComments = {};
+const defComments = {
+  0: "Admiration: D captures the contemplative pause; maybe use 'take in' instead of 'fathom' for learners.",
+  1: "Respect: D is crisp but negative; perhaps 'refusing to violate others’ dignity/boundaries'.",
+  2: "Right (adj.): D frames 'right' as logically survivable—good for correctness; note moral vs factual senses.",
+  3: "Horizon: 'panoramic limit' is vivid; consider 'apparent limit of sight (and understanding)'.",
+  4: "Number: 'quantitative dimension of classes' is philosophical—maybe 'of sets/categories' for clarity.",
+  5: "Politics: Normative ideal—'undertaking of actions that harm no one' in collective decision-making.",
+  6: "Politicking: Strong; perhaps 'often at the public’s expense' to allow borderline cases.",
+  7: "Mood (grammar): Define by speaker’s aim; add quick examples (indicative/imperative).",
+  8: "Diathesis (grammar): 'Trajectory of energy' works; include active/middle/passive examples.",
+  9: "Logic: Add 'valid inference preserves truth from premises to conclusion' to complement contradiction removal."
+};
 const $defComment = document.getElementById("def-comment");
 if ($defComment) {
   $defComment.addEventListener("input", () => {
