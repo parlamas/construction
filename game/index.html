@@ -88,6 +88,21 @@
   .footer{ margin-top:12px; font-size:14px; color:var(--muted); }
   .reveal{ margin-top:12px; font-size:16px; font-weight:600; }
   @media (max-width:540px){ .grid{ grid-template-columns:1fr } }
+
+  .def-comment-wrap{ margin-top:12px; }
+.def-comment{
+  width:100%;
+  min-height:80px;
+  font-size:14px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:var(--text);
+  resize:vertical;
+}
+.def-comment::placeholder{ color:var(--muted); }
+
 </style>
 </head>
 <body>
@@ -102,7 +117,47 @@
       What is the definition of <span class="term" id="term">…</span>?
     </div>
 
-    <div class="grid" id="options"></div>
+    
+<div class="grid" id="options">
+  <button class="option" data-key="A" aria-disabled="false">
+    <span class="badge">A.</span>
+    <div class="opt-text">
+      <span class="opt-prompt">Prompt: define admiration</span>
+      <span class="opt-def">Admiration is …</span>
+    </div>
+  </button>
+
+  <button class="option" data-key="B" aria-disabled="false">
+    <span class="badge">B.</span>
+    <div class="opt-text">
+      <span class="opt-prompt">Prompt: define admiration</span>
+      <span class="opt-def">Admiration is …</span>
+    </div>
+  </button>
+
+  <button class="option" data-key="C" aria-disabled="false">
+    <span class="badge">C.</span>
+    <div class="opt-text">
+      <span class="opt-prompt">Prompt: define admiration</span>
+      <span class="opt-def">Admiration is …</span>
+    </div>
+  </button>
+
+  <button class="option" data-key="D" aria-disabled="false">
+    <span class="badge">D.</span>
+    <div class="opt-text">
+      <span class="opt-prompt">Prompt: define admiration</span>
+      <span class="opt-def">Admiration is …</span>
+    </div>
+  </button>
+</div>
+
+<div class="def-comment-wrap">
+  <textarea id="def-comment" class="def-comment"
+    placeholder="Comment on this definition… (one comment for all options)"></textarea>
+</div>
+
+
 
     <div class="bar-wrap"><div class="bar" id="bar"></div></div>
     <div class="footer" id="footer"></div>
@@ -192,149 +247,198 @@
       },
       correct: "D",
     },
+    {
+      term: "mood (in grammar)",
+      options: { 
+        A: "In grammar, mood (also called mode) refers to a verbal category that expresses the speaker's attitude toward the action or state described by the verb. It indicates how the speaker views the reality, likelihood, or desirability of what they're expressing. (anthropic)", 
+        B: "In grammar, mood (sometimes called mode) is a grammatical feature of verbs that expresses the speaker's attitude toward the action or state described by the verb. It indicates whether the speaker is stating a fact, giving a command, expressing a wish, stating a hypothetical situation, or posing a question. (deepseek)", 
+        C: "In grammar, mood (sometimes called mode) is a grammatical feature of verbs that expresses the speaker's attitude toward the action or state described by the verb. It indicates whether the speaker is stating a fact, giving a command, expressing a wish, stating a hypothetical situation, or posing a question. (chatGPT 5)", 
+        D: "Mood is what the speaker or writer is hoping to achieve through the use of language. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "diathesis (in grammar)",
+      options: { 
+        A: "In grammar, diathesis (also called voice) refers to a grammatical category that indicates the relationship between the subject of a sentence and the action expressed by the verb. It shows whether the subject is performing the action, receiving the action, or in some other relationship to it. (anthropic)", 
+        B: "In grammar, diathesis is a somewhat technical term that refers to the relationship between the action (or state) expressed by the verb and the participants identified by the arguments of the verb (typically the subject and object). (deepseek)", 
+        C: "Diathesis is the semantic mapping of a clause—how an event’s energy/causal flow is distributed among participants, especially in relation to the subject. Diathesis is about meaning; the morphological marking of it is voice/stemme. (chatGPT 5)", 
+        D: "Diathesis is the trajectory of the energy in clauses, defined by the points of origin and destination. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "logic",
+      options: { 
+        A: "Logic is the systematic study of valid reasoning and the principles that govern correct thinking. It provides frameworks for distinguishing between sound and unsound arguments, and for understanding how conclusions can be properly drawn from premises. (anthropic)", 
+        B: "Logic is the systematic study of valid reasoning and the principles that govern correct thinking. It provides frameworks for distinguishing between sound and unsound arguments, and for understanding how conclusions can be properly drawn from premises. (deepseek)", 
+        C: "The study of valid inference—principles that distinguish good arguments from bad ones and preserve truth from premises to conclusion. (chatGPT 5)", 
+        D: "Logic is the removal of contradictions and conflicts that stand in the way of reaching a conclusion. (horistics)"
+      },
+      correct: "D",
+    },
   ];
 
-  // ---- State ----
-  let qIndex = 0;
-  let selected = /** @type {OptionKey|null} */ (null);
-  let locked = false;
-  let startedAt = Date.now();
-  let now = Date.now();
-  let rafId = 0;
-  let advanceTimeoutId = 0;
 
-  // ---- Elements ----
-  const $counter = document.getElementById("counter");
-  const $term   = document.getElementById("term");
-  const $opts   = document.getElementById("options");
-  const $bar    = document.getElementById("bar");
-  const $footer = document.getElementById("footer");
-  const $reveal = document.getElementById("reveal");
-  const $revealLetter = document.getElementById("reveal-letter");
-  const $restart = document.getElementById("restart");
+// ---- State ----
+let qIndex = 0;
+let selected = /** @type {OptionKey|null} */ (null);
+let locked = false;
+let startedAt = Date.now();
+let now = Date.now();
+let rafId = 0;
+let advanceTimeoutId = 0;
 
-  $restart.addEventListener("click", () => restart());
+// ---- Elements ----
+const $counter = document.getElementById("counter");
+const $term   = document.getElementById("term");
+const $opts   = document.getElementById("options");
+const $bar    = document.getElementById("bar");
+const $footer = document.getElementById("footer");
+const $reveal = document.getElementById("reveal");
+const $revealLetter = document.getElementById("reveal-letter");
+const $restart = document.getElementById("restart");
 
-  // ---- Helpers ----
-  const active = () => questions[Math.min(qIndex, questions.length - 1)];
-  const humanIndex = () => Math.min(qIndex, totalQuestions - 1) + 1;
+// NEW: one shared comment per definition (question)
+const defComments = {};
+const $defComment = document.getElementById("def-comment");
+if ($defComment) {
+  $defComment.addEventListener("input", () => {
+    defComments[qIndex] = $defComment.value;
+  });
+}
 
-  function tick(){
-    now = Date.now();
-    const elapsed = Math.min(now - startedAt, questionDurationMs);
-    const progress = 1 - elapsed / questionDurationMs;
-    $bar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
+$restart.addEventListener("click", () => restart());
 
-    if (elapsed >= questionDurationMs && !locked) {
-      lockQuestion();
-    } else if (!locked) {
-      rafId = requestAnimationFrame(tick);
-    }
-    const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
-    $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
-  }
+// ---- Helpers ----
+const active = () => questions[Math.min(qIndex, questions.length - 1)];
+const humanIndex = () => Math.min(qIndex, totalQuestions - 1) + 1;
 
-  function lockQuestion(){
-    locked = true;
-    renderOptions(); // apply correct/wrong classes
-    $reveal.hidden = false;
-    $revealLetter.textContent = active().correct;
-    maybeAutoAdvance();
-  }
+function tick(){
+  now = Date.now();
+  const elapsed = Math.min(now - startedAt, questionDurationMs);
+  const progress = 1 - elapsed / questionDurationMs;
+  $bar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
 
-  function maybeAutoAdvance(){
-    if (qIndex + 1 < runQuestions){
-      clearTimeout(advanceTimeoutId);
-      advanceTimeoutId = setTimeout(() => {
-        qIndex += 1;
-        startQuestion();
-      }, delayAfterRevealMs);
-    } else {
-      $restart.style.visibility = "visible";
-    }
-  }
-
-  function handlePick(key){
-    if (locked) return;
-    selected = key;
-    // no immediate visual change until lock (keeps behavior)
-  }
-
-  function renderOptions(){
-    const act = active();
-    $opts.innerHTML = "";
-    /** @type {OptionKey[]} */
-    (["A","B","C","D"]).forEach((k) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "option";
-      btn.setAttribute("data-key", k);
-      btn.setAttribute("aria-disabled", locked ? "true" : "false");
-      btn.addEventListener("click", () => handlePick(k));
-
-      // badge
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.textContent = `${k}.`;
-
-      // prompt + definition wrapper
-      const wrap = document.createElement("div");
-      wrap.className = "opt-text";
-
-      const prompt = document.createElement("span");
-      prompt.className = "opt-prompt";
-      prompt.textContent = `Prompt: define ${act.term}`;
-
-      const def = document.createElement("span");
-      def.className = "opt-def";
-      def.textContent = act.options[k];
-
-      wrap.appendChild(prompt);
-      wrap.appendChild(def);
-
-      // state styling (after locked)
-      if (locked && k === act.correct){
-        btn.classList.add("is-correct");
-        badge.classList.add("badge-correct");
-      }
-      const isWrongSel = locked && selected === k && k !== act.correct;
-      if (isWrongSel){
-        btn.classList.add("is-wrong");
-      }
-
-      btn.appendChild(badge);
-      btn.appendChild(wrap);
-      $opts.appendChild(btn);
-    });
-  }
-
-  function startQuestion(){
-    cancelAnimationFrame(rafId);
-    clearTimeout(advanceTimeoutId);
-
-    selected = null;
-    locked = false;
-    startedAt = Date.now();
-    now = startedAt;
-
-    $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
-    $term.textContent = active().term;
-    $reveal.hidden = true;
-    $revealLetter.textContent = active().correct;
-    $restart.style.visibility = "hidden";
-    renderOptions();
-
-    $bar.style.width = "100%";
+  if (elapsed >= questionDurationMs && !locked) {
+    lockQuestion();
+  } else if (!locked) {
     rafId = requestAnimationFrame(tick);
   }
+  const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
+  $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
+}
 
-  function restart(){
-    qIndex = 0;
-    startQuestion();
+function lockQuestion(){
+  locked = true;
+  renderOptions(); // apply correct/wrong classes
+  $reveal.hidden = false;
+  $revealLetter.textContent = active().correct;
+  maybeAutoAdvance();
+}
+
+function maybeAutoAdvance(){
+  if (qIndex + 1 < runQuestions){
+    clearTimeout(advanceTimeoutId);
+    advanceTimeoutId = setTimeout(() => {
+      // NEW: save current definition comment before advancing
+      if ($defComment) defComments[qIndex] = $defComment.value;
+
+      qIndex += 1;
+      startQuestion();
+    }, delayAfterRevealMs);
+  } else {
+    $restart.style.visibility = "visible";
   }
+}
 
-  // init
+function handlePick(key){
+  if (locked) return;
+  selected = key;
+  // no immediate visual change until lock (keeps behavior)
+}
+
+function renderOptions(){
+  const act = active();
+  $opts.innerHTML = "";
+  /** @type {OptionKey[]} */
+  (["A","B","C","D"]).forEach((k) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "option";
+    btn.setAttribute("data-key", k);
+    btn.setAttribute("aria-disabled", locked ? "true" : "false");
+    btn.addEventListener("click", () => handlePick(k));
+
+    // badge
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = `${k}.`;
+
+    // prompt + definition wrapper
+    const wrap = document.createElement("div");
+    wrap.className = "opt-text";
+
+    const prompt = document.createElement("span");
+    prompt.className = "opt-prompt";
+    prompt.textContent = `Prompt: define ${act.term}`;
+
+    const def = document.createElement("span");
+    def.className = "opt-def";
+    def.textContent = act.options[k];
+
+    wrap.appendChild(prompt);
+    wrap.appendChild(def);
+
+    // state styling (after locked)
+    if (locked && k === act.correct){
+      btn.classList.add("is-correct");
+      badge.classList.add("badge-correct");
+    }
+    const isWrongSel = locked && selected === k && k !== act.correct;
+    if (isWrongSel){
+      btn.classList.add("is-wrong");
+    }
+
+    btn.appendChild(badge);
+    btn.appendChild(wrap);
+    $opts.appendChild(btn);
+  });
+}
+
+function startQuestion(){
+  cancelAnimationFrame(rafId);
+  clearTimeout(advanceTimeoutId);
+
+  selected = null;
+  locked = false;
+  startedAt = Date.now();
+  now = startedAt;
+
+  $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
+  $term.textContent = active().term;
+
+  // NEW: restore saved comment (if any) for this definition
+  if ($defComment) $defComment.value = defComments[qIndex] || "";
+
+  $reveal.hidden = true;
+  $revealLetter.textContent = active().correct;
+  $restart.style.visibility = "hidden";
+  renderOptions();
+
+  $bar.style.width = "100%";
+  rafId = requestAnimationFrame(tick);
+}
+
+function restart(){
+  qIndex = 0;
   startQuestion();
+}
+
+// init
+startQuestion();
+
+  
 </script>
 
 </body>
