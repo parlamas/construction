@@ -26,18 +26,24 @@
   }
   .counter{ font-size:14px; color:var(--muted); font-weight:600; }
   .question{
-    font-size:22px; font-weight:700; margin-bottom:16px; text-align:justify;
+    font-size:22px; font-weight:700; margin-bottom:16px; text-align:justify; text-justify: inter-word; /* optional */
   }
   .term{ color:#8b4513; }
   .grid{
     display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;
   }
-  .option{
-    display:flex; align-items:center; gap:10px; padding:12px 14px;
-    border-radius:10px; border:1px solid var(--line);
-    background:var(--btn); color:var(--text);
-    cursor:pointer; user-select:none;
-    transition:transform 80ms ease, background 150ms ease, border 150ms ease, color 150ms ease;
+  .option{display:flex;
+  align-items: flex-start;   /* was: center */
+  gap:10px;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  user-select:none;
+  transition:transform 80ms ease, background 150ms ease, border 150ms ease, color 150ms ease;
+  text-align: left; 
   }
   .option[aria-disabled="true"]{ cursor:default }
   .option:active{ transform:scale(.99) }
@@ -45,6 +51,17 @@
     font-weight:800; font-size:13px; line-height:1; padding:6px 8px; border-radius:8px;
     background:var(--badge); min-width:26px; text-align:center; border:1px solid transparent;
   }
+
+.option > span:last-child{
+  display: block;
+  flex: 1;                   /* stretch so justification uses full width */
+  text-align: justify;
+  text-justify: inter-word;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+
   /* state styles applied via classes */
   .is-correct{ background:var(--good)!important; border-color:var(--good-line)!important; color:#fff!important; }
   .is-wrong { background:var(--bad)!important;  border-color:var(--bad-line)!important;  color:#fff!important; }
