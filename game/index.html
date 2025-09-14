@@ -52,14 +52,26 @@
     background:var(--badge); min-width:26px; text-align:center; border:1px solid transparent;
   }
 
-.option > span:last-child{
-  display: block;
-  flex: 1;                   /* stretch so justification uses full width */
+.opt-text{
+  display:block;
+  flex:1;                 /* lets text fill the remaining width */
   text-align: justify;
   text-justify: inter-word;
   white-space: normal;
   overflow-wrap: anywhere;
 }
+.opt-prompt{
+  display:block;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom:4px;
+  font-weight:600;
+}
+.opt-def{
+  display:block;
+  font-size:15px;
+}
+
 
 
   /* state styles applied via classes */
@@ -103,7 +115,7 @@
 <script>
   // ---- Config ----
   const totalQuestions = 10;
-  const runQuestions = 3;
+  const runQuestions = 4;
   const questionDurationMs = 10_000;  // 10s
   const delayAfterRevealMs = 3_000;   // +3s
 
@@ -114,9 +126,10 @@
       term: "admiration",
       options: { 
         A: "Admiration is a feeling of respect, approval, and wonder toward someone or something that you regard as impressive, excellent, or worthy of esteem. It involves recognizing and appreciating qualities, achievements, or characteristics that you find remarkable or inspiring. (anthropic)", 
-      B: "Admiration is a feeling of respectful approval, wonder, and delight directed toward someone or something considered to be possessing superior qualities, abilities, or achievements. It is a complex social emotion that involves looking up to and valuing another entity. (deepseek)", 
-    C: "Admiration is a warm feeling of respect and approval—often mixed with pleasure or awe—toward someone or something because of their qualities, achievements, or beauty. (chatGPT 5)", 
-  D: "Admiration is pausing to fathom the exceptional. (horistics)" },
+        B: "Admiration is a feeling of respectful approval, wonder, and delight directed toward someone or something considered to be possessing superior qualities, abilities, or achievements. It is a complex social emotion that involves looking up to and valuing another entity. (deepseek)", 
+        C: "Admiration is a warm feeling of respect and approval—often mixed with pleasure or awe—toward someone or something because of their qualities, achievements, or beauty. (chatGPT 5)", 
+        D: "Admiration is pausing to fathom the exceptional. (horistics)"
+      },
       correct: "D",
     },
     {
@@ -132,19 +145,21 @@
     {
       term: "right (ajective)",
       options: { 
-        A: "Right is Something that aligns with ethical principles, fairness, or moral standards. For example, 'It was the right thing to do' refers to an action that was morally appropriate or virtuous. (anthropic)", 
-      B: "Right refers to actions, decisions, or principles that are good, just, and aligned with ethical standards. (deepseek)", 
-    C: "Right is right answer; You were right about the date. (chatGPT 5)", 
-  D: "Right is whatever can withstand logical scrutiny. (horistics)" },
+        A: "Right is something that aligns with ethical principles, fairness, or moral standards. For example, 'It was the right thing to do' refers to an action that was morally appropriate or virtuous. (anthropic)", 
+        B: "Right refers to actions, decisions, or principles that are good, just, and aligned with ethical standards. (deepseek)", 
+        C: "Right is the right answer; You were right about the date. (chatGPT 5)", 
+        D: "Right is whatever can withstand logical scrutiny. (horistics)"
+      },
       correct: "D",
     },
     {
       term: "horizon",
       options: { 
         A: "Right is Something that aligns with ethical principles, fairness, or moral standards. For example, 'It was the right thing to do' refers to an action that was morally appropriate or virtuous. (anthropic)", 
-      B: "Right refers to actions, decisions, or principles that are good, just, and aligned with ethical standards. (deepseek)", 
-    C: "Right is right answer; You were right about the date. (chatGPT 5)", 
-  D: "Horizon is the panoramic limit of human sight. (horistics)" },
+        B: "Right refers to actions, decisions, or principles that are good, just, and aligned with ethical standards. (deepseek)", 
+        C: "Right is right answer; You were right about the date. (chatGPT 5)", 
+        D: "Horizon is the panoramic limit of human sight. (horistics)"
+      },
       correct: "D",
     },
   ];
@@ -160,9 +175,9 @@
 
   // ---- Elements ----
   const $counter = document.getElementById("counter");
-  const $term = document.getElementById("term");
-  const $opts = document.getElementById("options");
-  const $bar = document.getElementById("bar");
+  const $term   = document.getElementById("term");
+  const $opts   = document.getElementById("options");
+  const $bar    = document.getElementById("bar");
   const $footer = document.getElementById("footer");
   const $reveal = document.getElementById("reveal");
   const $revealLetter = document.getElementById("reveal-letter");
@@ -185,7 +200,6 @@
     } else if (!locked) {
       rafId = requestAnimationFrame(tick);
     }
-    // footer
     const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
     $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
   }
@@ -206,7 +220,6 @@
         startQuestion();
       }, delayAfterRevealMs);
     } else {
-      // finished the run
       $restart.style.visibility = "visible";
     }
   }
@@ -214,7 +227,7 @@
   function handlePick(key){
     if (locked) return;
     selected = key;
-    // (no immediate visual change until lock; matches original behavior)
+    // no immediate visual change until lock (keeps behavior)
   }
 
   function renderOptions(){
@@ -234,10 +247,20 @@
       badge.className = "badge";
       badge.textContent = `${k}.`;
 
-      // text
-      const txt = document.createElement("span");
-      txt.style.fontSize = "15px";
-      txt.textContent = act.options[k];
+      // prompt + definition wrapper
+      const wrap = document.createElement("div");
+      wrap.className = "opt-text";
+
+      const prompt = document.createElement("span");
+      prompt.className = "opt-prompt";
+      prompt.textContent = `Prompt: define ${act.term}`;
+
+      const def = document.createElement("span");
+      def.className = "opt-def";
+      def.textContent = act.options[k];
+
+      wrap.appendChild(prompt);
+      wrap.appendChild(def);
 
       // state styling (after locked)
       if (locked && k === act.correct){
@@ -250,23 +273,20 @@
       }
 
       btn.appendChild(badge);
-      btn.appendChild(txt);
+      btn.appendChild(wrap);
       $opts.appendChild(btn);
     });
   }
 
   function startQuestion(){
-    // cleanup timers
     cancelAnimationFrame(rafId);
     clearTimeout(advanceTimeoutId);
 
-    // reset state
     selected = null;
     locked = false;
     startedAt = Date.now();
     now = startedAt;
 
-    // render
     $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
     $term.textContent = active().term;
     $reveal.hidden = true;
@@ -274,7 +294,6 @@
     $restart.style.visibility = "hidden";
     renderOptions();
 
-    // start timer loop
     $bar.style.width = "100%";
     rafId = requestAnimationFrame(tick);
   }
@@ -287,5 +306,6 @@
   // init
   startQuestion();
 </script>
+
 </body>
 </html>
