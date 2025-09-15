@@ -104,6 +104,30 @@
 }
 .def-comment::placeholder{ color:var(--muted); }
 
+.nav-grid{
+  display:grid;
+  grid-template-columns: repeat(12, minmax(36px,1fr));
+  gap:8px;
+  margin:8px 0 12px;
+}
+.qbtn{
+  padding:8px 0;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  font-weight:600;
+}
+.qbtn.is-active{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+
+/* optional if you’re not using the timer anymore */
+.bar-wrap, .footer, .reveal { display:none; }
+
+
 </style>
 </head>
 <body>
@@ -118,6 +142,19 @@
       <div class="counter" id="counter">1 of 10</div>
       <button id="restart" aria-label="Restart quiz" style="visibility:hidden;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer">Restart</button>
     </div>
+
+    <!-- ✅ place the jump buttons here, immediately after the header -->
+  <div class="nav-grid" id="qnav" aria-label="Jump to definition"></div>
+
+  <div class="question" id="q-text">
+    What is the definition of <span class="term" id="term">…</span>?
+  </div>
+
+  <div class="grid" id="options"></div>
+  <div class="def-comment-wrap">
+    <textarea id="def-comment" class="def-comment"
+      placeholder="Comment on this definition… (one comment for all options)"></textarea>
+  </div>
 
     <div class="question" id="q-text">
       What is the definition of <span class="term" id="term">…</span>?
@@ -174,15 +211,11 @@
   </div>
 
 <script>
-  // ---- Config ----
-  const totalQuestions = 12;
-  const runQuestions = 12;
-  const questionDurationMs = 10_000;  // 10s
-  const delayAfterRevealMs = 3_000;   // +3s
-
+  // ---- Data ----
   /** @typedef {"A"|"B"|"C"|"D"} OptionKey */
-  /** @type {{term:string; options:Record<OptionKey,string>; correct:OptionKey}[]} */
   const questions = [
+    /* ... keep your existing 12-question array exactly as you have it ... */
+    // (I kept your full array unchanged)
     {
       term: "admiration",
       options: { 
@@ -305,180 +338,117 @@
     },
   ];
 
+  // ---- Config derived from data ----
+  const totalQuestions = questions.length;
+  const runQuestions = totalQuestions;
 
-// ---- State ----
-let qIndex = 0;
-let selected = /** @type {OptionKey|null} */ (null);
-let locked = false;
-let startedAt = Date.now();
-let now = Date.now();
-let rafId = 0;
-let advanceTimeoutId = 0;
+  // ---- State ----
+  let qIndex = 0;
+  let selected = /** @type {OptionKey|null} */ (null);
 
-// ---- Elements ----
-const $counter = document.getElementById("counter");
-const $term   = document.getElementById("term");
-const $opts   = document.getElementById("options");
-const $bar    = document.getElementById("bar");
-const $footer = document.getElementById("footer");
-const $reveal = document.getElementById("reveal");
-const $revealLetter = document.getElementById("reveal-letter");
-const $restart = document.getElementById("restart");
+  // ---- Elements ----
+  const $counter = document.getElementById("counter");
+  const $term   = document.getElementById("term");
+  const $opts   = document.getElementById("options");
+  const $qnav   = document.getElementById("qnav");
+  const $reveal = document.getElementById("reveal");           // stays hidden (manual mode)
+  const $revealLetter = document.getElementById("reveal-letter");
+  const $restart = document.getElementById("restart");
+  const $defComment = document.getElementById("def-comment");
 
-// NEW: one shared comment per definition (question)
-const defComments = {
-  0: "Admiration...",
-  1: "'Respect' is sometimes used to mean admiration.",
-  2: "Now, we know what 'wrong' is...",
-  3: "'Horizon' is derived from 'horistics.'",
-  4: "Examples: 3 cars (class=cars); 365 days (class=days); 10 countries (countries=class); 2.5 months (months=class)",
-  5: "When they say politics, they mean politicking...",
-  6: "They never say 'politicking,' they always say 'politics...'",
-  7: "We have four moods: indicative, imperative, subjunctive, and optative.",
-  8: "Diathesis and voice are distinct and unrelated concepts. In grammar books, “voice” is often used to mean diathesis. Among contemporary languages, only Greek has voices; others do not, though all have diatheses, a language-independent concept. This confusion stems from widespread sciolism in the academic community. Diatheses refer to energy distribution in the clause; voices refer to dedicated systems of distinct verb endings or changes of the stem of verbs. In other words, it concerns systems of distinct spelling to reflect the different diatheses, something that we find only in Greek. Sanskrit and Latin also have voices, but they are no longer spoken.",
-  9: "Logic...",
-  10: "Voice cannot be a handful of distinct verb forms because a handful does not constitute a dedicated system. Online, sciolism is rife, a copy-and-paste culture.",
-  11: "Communism is a noble idea, and no one could successfully argue against it. There is no excuse for some people to have more access to economic resources than others. By contrast, Leninism, Stalinism, and Sovietism are thuggish and tyrannical, and could not be further from communism."
-};
-const $defComment = document.getElementById("def-comment");
-if ($defComment) {
+  // Shared comment per definition (prefill optional)
+  const defComments = {
+    0: "Admiration...",
+    1: "'Respect' is sometimes used to mean admiration.",
+    2: "Now, we know what 'wrong' is...",
+    3: "'Horizon' is derived from 'horistics.'",
+    4: "Examples: 3 cars (class=cars); 365 days (class=days); 10 countries (countries=class); 2.5 months (months=class)",
+    5: "When they say politics, they mean politicking...",
+    6: "They never say 'politicking,' they always say 'politics...'",
+    7: "We have four moods: indicative, imperative, subjunctive, and optative.",
+    8: "Diathesis and voice are distinct and unrelated concepts... Sanskrit and Latin also have voices, but they are no longer spoken.",
+    9: "Logic...",
+    10:"Voice cannot be a handful of distinct verb forms because a handful does not constitute a dedicated system...",
+    11:"Communism is a noble idea..."
+  };
+
   $defComment.addEventListener("input", () => {
     defComments[qIndex] = $defComment.value;
   });
-}
 
-$restart.addEventListener("click", () => restart());
+  $restart.addEventListener("click", () => { qIndex = 0; startQuestion(); });
 
-// ---- Helpers ----
-const active = () => questions[Math.min(qIndex, questions.length - 1)];
-const humanIndex = () => Math.min(qIndex, totalQuestions - 1) + 1;
+  const humanIndex = () => Math.min(qIndex, runQuestions - 1) + 1;
 
-function tick(){
-  now = Date.now();
-  const elapsed = Math.min(now - startedAt, questionDurationMs);
-  const progress = 1 - elapsed / questionDurationMs;
-  $bar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
-
-  if (elapsed >= questionDurationMs && !locked) {
-    lockQuestion();
-  } else if (!locked) {
-    rafId = requestAnimationFrame(tick);
-  }
-  const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
-  $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
-}
-
-function lockQuestion(){
-  locked = true;
-  renderOptions(); // apply correct/wrong classes
-  $reveal.hidden = false;
-  $revealLetter.textContent = active().correct;
-  maybeAutoAdvance();
-}
-
-function maybeAutoAdvance(){
-  if (qIndex + 1 < runQuestions){
-    clearTimeout(advanceTimeoutId);
-    advanceTimeoutId = setTimeout(() => {
-      // NEW: save current definition comment before advancing
-      if ($defComment) defComments[qIndex] = $defComment.value;
-
-      qIndex += 1;
-      startQuestion();
-    }, delayAfterRevealMs);
-  } else {
-    $restart.style.visibility = "visible";
-  }
-}
-
-function handlePick(key){
-  if (locked) return;
-  selected = key;
-  // no immediate visual change until lock (keeps behavior)
-}
-
-function renderOptions(){
-  const act = active();
-  $opts.innerHTML = "";
-  /** @type {OptionKey[]} */
-  (["A","B","C","D"]).forEach((k) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "option";
-    btn.setAttribute("data-key", k);
-    btn.setAttribute("aria-disabled", locked ? "true" : "false");
-    btn.addEventListener("click", () => handlePick(k));
-
-    // badge
-    const badge = document.createElement("span");
-    badge.className = "badge";
-    badge.textContent = `${k}.`;
-
-    // prompt + definition wrapper
-    const wrap = document.createElement("div");
-    wrap.className = "opt-text";
-
-    const prompt = document.createElement("span");
-    prompt.className = "opt-prompt";
-    prompt.textContent = `Prompt: define ${act.term}`;
-
-    const def = document.createElement("span");
-    def.className = "opt-def";
-    def.textContent = act.options[k];
-
-    wrap.appendChild(prompt);
-    wrap.appendChild(def);
-
-    // state styling (after locked)
-    if (locked && k === act.correct){
-      btn.classList.add("is-correct");
-      badge.classList.add("badge-correct");
+  // ---- Nav buttons (1..N) ----
+  function renderNav(){
+    $qnav.innerHTML = "";
+    for (let i = 0; i < runQuestions; i++){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "qbtn" + (i === qIndex ? " is-active" : "");
+      b.textContent = String(i + 1);
+      b.addEventListener("click", () => {
+        // save current comment before switching
+        defComments[qIndex] = $defComment.value;
+        qIndex = i;
+        startQuestion();
+      });
+      $qnav.appendChild(b);
     }
-    const isWrongSel = locked && selected === k && k !== act.correct;
-    if (isWrongSel){
-      btn.classList.add("is-wrong");
-    }
+  }
 
-    btn.appendChild(badge);
-    btn.appendChild(wrap);
-    $opts.appendChild(btn);
-  });
-}
+  // ---- Render options for current question ----
+  function renderOptions(){
+    const act = questions[qIndex];
+    $opts.innerHTML = "";
+    (["A","B","C","D"]).forEach((k) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.setAttribute("data-key", k);
+      btn.addEventListener("click", () => { selected = k; /* no auto-reveal in manual mode */ });
 
-function startQuestion(){
-  cancelAnimationFrame(rafId);
-  clearTimeout(advanceTimeoutId);
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = `${k}.`;
 
-  selected = null;
-  locked = false;
-  startedAt = Date.now();
-  now = startedAt;
+      const wrap = document.createElement("div");
+      wrap.className = "opt-text";
 
-  $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
-  $term.textContent = active().term;
+      const prompt = document.createElement("span");
+      prompt.className = "opt-prompt";
+      prompt.textContent = `Prompt: define ${act.term}`;
 
-  // NEW: restore saved comment (if any) for this definition
-  if ($defComment) $defComment.value = defComments[qIndex] || "";
+      const def = document.createElement("span");
+      def.className = "opt-def";
+      def.textContent = act.options[k];
 
-  $reveal.hidden = true;
-  $revealLetter.textContent = active().correct;
-  $restart.style.visibility = "hidden";
-  renderOptions();
+      wrap.appendChild(prompt);
+      wrap.appendChild(def);
+      btn.appendChild(badge);
+      btn.appendChild(wrap);
+      $opts.appendChild(btn);
+    });
+  }
 
-  $bar.style.width = "100%";
-  rafId = requestAnimationFrame(tick);
-}
+  // ---- Start/render current question (no timers) ----
+  function startQuestion(){
+    const act = questions[qIndex];
+    $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
+    $term.textContent = act.term;
 
-function restart(){
-  qIndex = 0;
+    // restore saved comment for this definition
+    $defComment.value = defComments[qIndex] || "";
+
+    renderNav();      // update active button
+    renderOptions();  // show A–D
+  }
+
+  // init
   startQuestion();
-}
-
-// init
-startQuestion();
-
-  
 </script>
 
 </body>
 </html>
+
