@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="q.css">
+<title>1</title>
+<style>
+  :root{
+    --bg:#ffffff; --card:#fff; --text:#000; --muted:#6b7280; --line:#e5e7eb;
+    --btn:#f9fafb; --good:#10b981; --good-line:#059669; --bad:#ef4444; --bad-line:#dc2626;
+    --accent:#3b82f6; --badge:#f3f4f6; --badge-text:#111827; --good-text:#16a34a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    color:var(--text);
+  }
+  .container{
+    max-width:820px; margin:32px auto; padding:16px;
+    border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05); background:var(--card);
+  }
+  .header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+  }
+  .counter{ font-size:14px; color:var(--muted); font-weight:600; }
+  .question{
+    font-size:17pt; font-weight:700; margin-bottom:16px; text-align:justify; text-justify: inter-word; /* optional */
+  }
+  .term{ color:#8b4513; }
+  .grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;
+  }
+  .option{display:flex;
+  align-items: flex-start;   /* was: center */
+  gap:10px;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  user-select:none;
+  transition:transform 80ms ease, background 150ms ease, border 150ms ease, color 150ms ease;
+  text-align: left; 
+  }
+  .option[aria-disabled="true"]{ cursor:default }
+  .option:active{ transform:scale(.99) }
+  .badge{
+    font-weight:800; font-size:13px; line-height:1; padding:6px 8px; border-radius:8px;
+    background:var(--badge); min-width:26px; text-align:center; border:1px solid transparent;
+  }
+
+.opt-text{
+  display:block;
+  flex:1;                 /* lets text fill the remaining width */
+  text-align: justify;
+  text-justify: inter-word;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.opt-prompt{
+  display:block;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom:4px;
+  font-weight:600;
+}
+.opt-def{
+  display:block;
+  font-size:15pt;
+}
+
+
+
+  /* state styles applied via classes */
+  .is-correct{ background:var(--good)!important; border-color:var(--good-line)!important; color:#fff!important; }
+  .is-wrong { background:var(--bad)!important;  border-color:var(--bad-line)!important;  color:#fff!important; }
+  .badge-correct{ color:var(--good-text)!important; border-color:var(--good-text)!important; }
+  .bar-wrap{
+    position:relative; height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; margin-top:16px;
+  }
+  .bar{
+    position:absolute; left:0; top:0; bottom:0; width:100%; background:var(--accent);
+    transition:width 100ms linear;
+  }
+  .footer{ margin-top:12px; font-size:14px; color:var(--muted); }
+  .reveal{ margin-top:12px; font-size:16px; font-weight:600; }
+  @media (max-width:540px){ .grid{ grid-template-columns:1fr } }
+
+  .def-comment-wrap{ margin-top:12px; }
+.def-comment{
+  width:100%;
+  min-height:120px;
+  font-size:12pt;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:var(--text);
+  resize:vertical;
+}
+.def-comment::placeholder{ color:var(--muted); }
+
+</style>
+</head>
+<body>
+  <center>
+  <img src="logo.png" width=215 height=44><br>
+  <div class="wow">Isidoros Parlamas is a Socratic scholar and founder of horistics.</div>
+  horistics.ai &bull; horistics.com
+</center>
+  <div class="container" role="region" aria-labelledby="q-text">
+    <div class="header">
+      <div></div>
+      <div class="counter" id="counter">1 of 10</div>
+      <button id="restart" aria-label="Restart quiz" style="visibility:hidden;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer">Restart</button>
+    </div>
+
+    <!-- ✅ place the jump buttons here, immediately after the header -->
+  <div class="nav-grid" id="qnav" aria-label="Jump to definition"></div>
+
+  <div class="question" id="q-text">
+    What is the definition of <span class="term" id="term">…</span>?
+  </div>
+
+  <div class="grid" id="options"></div>
+  <div class="def-comment-wrap">
+    <textarea id="def-comment" class="def-comment"
+      placeholder="Comment on this definition… (one comment for all options)"></textarea>
+  </div>
+
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+    <div class="footer" id="footer"></div>
+
+    <div class="reveal" id="reveal" hidden>
+      After 10 sec: <span style="color: var(--good)"><span id="reveal-letter">A</span></span>
+    </div>
+  </div>
+
+<script>
+  // ---- Config ----
+  const totalQuestions = 12;
+  const runQuestions = 12;
+  const questionDurationMs = 10_000;  // 10s
+  const delayAfterRevealMs = 3_000;   // +3s
+
+  /** @typedef {"A"|"B"|"C"|"D"} OptionKey */
+  /** @type {{term:string; options:Record<OptionKey,string>; correct:OptionKey}[]} */
+  const questions = [
+    {
+      term: "admiration",
+      options: { 
+        A: "Admiration is a feeling of respect, approval, and wonder toward someone or something that you regard as impressive, excellent, or worthy of esteem. It involves recognizing and appreciating qualities, achievements, or characteristics that you find remarkable or inspiring. (anthropic)", 
+        B: "Admiration is a feeling of respectful approval, wonder, and delight directed toward someone or something considered to be possessing superior qualities, abilities, or achievements. It is a complex social emotion that involves looking up to and valuing another entity. (deepseek)", 
+        C: "Admiration is a warm feeling of respect and approval—often mixed with pleasure or awe—toward someone or something because of their qualities, achievements, or beauty. (chatGPT 5)", 
+        D: "Admiration is pausing to fathom the exceptional. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "respect (noun)",
+      options: {
+        A: "Respect is a fundamental attitude of regard, consideration, and acknowledgment of the worth, dignity, or rights of someone or something. It involves recognizing value in others and treating them accordingly, even when you may disagree with them or find differences. (anthropic)",
+        B: "Respect is a feeling of deep admiration, regard, or esteem for someone or something elicited by their abilities, qualities, values, or achievements. More fundamentally, it is the due regard for the feelings, wishes, rights, or traditions of others, often manifested through polite and considerate behavior. (deepseek)",
+        C: "Respect is the recognition of someone’s (or something’s) inherent worth, rights, and boundaries—and a willingness to act accordingly. (chatGPT 5)",
+        D: "Respect is refusing to violate. (horistics)",
+      },
+      correct: "D",
+    },
+    {
+      term: "right (adjective)",
+      options: { 
+        A: "Right is something that aligns with ethical principles, fairness, or moral standards. For example, 'It was the right thing to do' refers to an action that was morally appropriate or virtuous. (anthropic)", 
+        B: "Right refers to actions, decisions, or principles that are good, just, and aligned with ethical standards. (deepseek)", 
+        C: "Right is the right answer; You were right about the date. (chatGPT 5)", 
+        D: "Right is whatever can withstand logical scrutiny. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "horizon",
+      options: { 
+        A: "A horizon refers to the apparent line where the earth's surface and the sky appear to meet when viewed from any given point. This creates a circular boundary around the observer that seems to limit how far you can see in any direction. (anthropic)", 
+        B: "A horizon refers to the apparent line where the earth's surface and the sky appear to meet when viewed from any given point. This creates a circular boundary around the observer that seems to limit how far you can see in any direction. (deepseek)", 
+        C: "The apparent line where the earth/sea seems to meet the sky; the limit of ordinary sight. Storm clouds gathered on the horizon. (chatGPT 5)", 
+        D: "Horizon is the panoramic limit of human sight, either literally or metaphorically. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "number",
+      options: { 
+        A: "A number is an abstract mathematical concept used to represent quantity, position, or measurement. Numbers are fundamental tools for counting, calculating, and describing relationships between quantities. (anthropic)", 
+        B: "A number is a mathematical object used to count, measure, and label. It represents a quantity or value. Numbers are fundamental to mathematics and are used in virtually every aspect of daily life, from simple counting to complex scientific calculations. (deepseek)", 
+        C: "A number is an abstract value used to express quantity, order, or measure (e.g., 3, −7, ½, π, √2, 4+2i). (chatGPT 5)", 
+        D: "Number is the precise quantitative dimension of classes. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "politics",
+      options: { 
+        A: "Politics refers to the activities, processes, and principles involved in governing and making decisions for groups of people, particularly in formal governmental structures. It encompasses how societies organize power, allocate resources, and resolve conflicts about public matters. (anthropic)", 
+        B: "Politics is the process of making decisions that apply to members of a group. It involves the activities associated with the governance of a country, area, or organization, especially the debate or conflict among individuals or parties having or hoping to achieve power. (deepseek)", 
+        C: "Politics is the process of making decisions that apply to members of a group. It involves the activities associated with the governance of a country, area, or organization, especially the debate or conflict among individuals or parties having or hoping to achieve power. (chatGPT 5)", 
+        D: "Politics is the undertaking of actions that harm no one. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "politicking",
+      options: { 
+        A: "Politicking refers to the active engagement in political maneuvering, campaigning, or strategic activities aimed at gaining political advantage or influence. It describes the practical, often behind-the-scenes work of politics rather than the formal governing processes themselves. (anthropic)", 
+        B: "Politicking is the act of engaging in political activity, specifically of a kind that is often considered calculated, strategic, and self-serving. It typically involves maneuvering to gain power, influence, or advantage within a group, organization, or government, rather than focusing on substantive policy or the common good. (deepseek)", 
+        C: "Politicking is engaging in political maneuvering—especially partisan, self-serving, or tactical activity aimed at gaining advantage rather than serving principle. (chatGPT 5)", 
+        D: "Politicking is the maneuvering and arm-twisting to gain and wield power over a country or society, at the expense of its citizenry. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "mood (in grammar)",
+      options: { 
+        A: "In grammar, mood (also called mode) refers to a verbal category that expresses the speaker's attitude toward the action or state described by the verb. It indicates how the speaker views the reality, likelihood, or desirability of what they're expressing. (anthropic)", 
+        B: "In grammar, mood (sometimes called mode) is a grammatical feature of verbs that expresses the speaker's attitude toward the action or state described by the verb. It indicates whether the speaker is stating a fact, giving a command, expressing a wish, stating a hypothetical situation, or posing a question. (deepseek)", 
+        C: "In grammar, mood (sometimes called mode) is a grammatical feature of verbs that expresses the speaker's attitude toward the action or state described by the verb. It indicates whether the speaker is stating a fact, giving a command, expressing a wish, stating a hypothetical situation, or posing a question. (chatGPT 5)", 
+        D: "Mood is what the speaker or writer is hoping to achieve through the use of language. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "diathesis (in grammar)",
+      options: { 
+        A: "In grammar, diathesis (also called voice) refers to a grammatical category that indicates the relationship between the subject of a sentence and the action expressed by the verb. It shows whether the subject is performing the action, receiving the action, or in some other relationship to it. (anthropic)", 
+        B: "In grammar, diathesis is a somewhat technical term that refers to the relationship between the action (or state) expressed by the verb and the participants identified by the arguments of the verb (typically the subject and object). (deepseek)", 
+        C: "Diathesis is the semantic mapping of a clause—how an event’s energy/causal flow is distributed among participants, especially in relation to the subject. Diathesis is about meaning; the morphological marking of it is voice/stemme. (chatGPT 5)", 
+        D: "Diathesis is the trajectory of the energy in clauses, defined by the points of origin and destination. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "logic",
+      options: { 
+        A: "Logic is the systematic study of valid reasoning and the principles that govern correct thinking. It provides frameworks for distinguishing between sound and unsound arguments, and for understanding how conclusions can be properly drawn from premises. (anthropic)", 
+        B: "Logic is the systematic study of valid reasoning and the principles that govern correct thinking. It provides frameworks for distinguishing between sound and unsound arguments, and for understanding how conclusions can be properly drawn from premises. (deepseek)", 
+        C: "The study of valid inference—principles that distinguish good arguments from bad ones and preserve truth from premises to conclusion. (chatGPT 5)", 
+        D: "Logic is the removal of contradictions and conflicts that stand in the way of reaching a conclusion. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "voice (in grammar)",
+      options: { 
+        A: "In grammar, voice is a verbal category that indicates the relationship between the subject of a sentence and the action expressed by the verb. It shows whether the grammatical subject is performing the action, receiving it, or has some other relationship to it. (anthropic)", 
+        B: "Voice is a grammatical category that describes the relationship between the action expressed by the verb and the participants identified by its arguments (typically the subject and object). It indicates whether the subject of the sentence is performing the action or receiving the action. (deepseek)", 
+        C: "Voice is the grammatical coding of diathesis—a system that maps participants’ semantic roles (agent, patient, etc.) onto syntactic functions (subject, object), potentially altering argument structure (promotion, demotion, suppression) and associated case/agreement. (chatGPT 5)", 
+        D: "Voice is a morphological category of the verb that belongs to a dedicated grammatical system for providing form to diathesis. (horistics)"
+      },
+      correct: "D",
+    },
+    {
+      term: "communism",
+      options: { 
+        A: "Communism is a political and economic theory that advocates for a classless, stateless society where the means of production are collectively owned and goods are distributed according to need rather than ability to pay. (anthropic)", 
+        B: "Communism is a political and economic ideology that advocates for a classless, stateless, and moneyless society structured upon common ownership of the means of production (factories, land, resources, etc.) and the principle of 'from each according to his ability, to each according to his needs.' (deepseek)",
+        C: "A political–economic doctrine aiming at a classless, stateless society in which the means of production are commonly owned and goods are allocated by need rather than markets. (chatGPT 5)", 
+        D: "Communism is every single citizen having equal access to the economic resources in a given political entity. (horistics)"
+      },
+      correct: "D",
+    },
+  ];
+
+
+// ---- State ----
+let qIndex = 0;
+let selected = /** @type {OptionKey|null} */ (null);
+let locked = false;
+let startedAt = Date.now();
+let now = Date.now();
+let rafId = 0;
+let advanceTimeoutId = 0;
+
+// ---- Elements ----
+const $counter = document.getElementById("counter");
+const $term   = document.getElementById("term");
+const $opts   = document.getElementById("options");
+const $bar    = document.getElementById("bar");
+const $footer = document.getElementById("footer");
+const $reveal = document.getElementById("reveal");
+const $revealLetter = document.getElementById("reveal-letter");
+const $restart = document.getElementById("restart");
+
+// NEW: one shared comment per definition (question)
+const defComments = {
+  0: "Admiration...",
+  1: "'Respect' is sometimes used to mean admiration.",
+  2: "Now, we know what 'wrong' is...",
+  3: "'Horizon' is derived from 'horistics.'",
+  4: "Examples: 3 cars (class=cars); 365 days (class=days); 10 countries (countries=class); 2.5 months (months=class)",
+  5: "When they say politics, they mean politicking...",
+  6: "They never say 'politicking,' they always say 'politics...'",
+  7: "We have four moods: indicative, imperative, subjunctive, and optative.",
+  8: "Diathesis and voice are distinct and unrelated concepts. In grammar books, “voice” is often used to mean diathesis. Among contemporary languages, only Greek has voices; others do not, though all have diatheses, a language-independent concept. This confusion stems from widespread sciolism in the academic community. Diatheses refer to energy distribution in the clause; voices refer to dedicated systems of distinct verb endings or changes of the stem of verbs. In other words, it concerns systems of distinct spelling to reflect the different diatheses, something that we find only in Greek. Sanskrit and Latin also have voices, but they are no longer spoken.",
+  9: "Logic...",
+  10: "Voice cannot be a handful of distinct verb forms because a handful does not constitute a dedicated system. Online, sciolism is rife, a copy-and-paste culture.",
+  11: "Communism is a noble idea, and no one could successfully argue against it. There is no excuse for some people to have more access to economic resources than others. By contrast, Leninism, Stalinism, and Sovietism are thuggish and tyrannical, and could not be further from communism."
+};
+const $defComment = document.getElementById("def-comment");
+if ($defComment) {
+  $defComment.addEventListener("input", () => {
+    defComments[qIndex] = $defComment.value;
+  });
+}
+
+$restart.addEventListener("click", () => restart());
+
+// ---- Helpers ----
+const active = () => questions[Math.min(qIndex, questions.length - 1)];
+const humanIndex = () => Math.min(qIndex, totalQuestions - 1) + 1;
+
+function tick(){
+  now = Date.now();
+  const elapsed = Math.min(now - startedAt, questionDurationMs);
+  const progress = 1 - elapsed / questionDurationMs;
+  $bar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
+
+  if (elapsed >= questionDurationMs && !locked) {
+    lockQuestion();
+  } else if (!locked) {
+    rafId = requestAnimationFrame(tick);
+  }
+  const remaining = Math.ceil((questionDurationMs - elapsed) / 1000);
+  $footer.textContent = locked ? "Time’s up." : `Time remaining: ${Math.max(0, remaining)}s`;
+}
+
+function lockQuestion(){
+  locked = true;
+  renderOptions(); // apply correct/wrong classes
+  $reveal.hidden = false;
+  $revealLetter.textContent = active().correct;
+  maybeAutoAdvance();
+}
+
+function maybeAutoAdvance(){
+  if (qIndex + 1 < runQuestions){
+    clearTimeout(advanceTimeoutId);
+    advanceTimeoutId = setTimeout(() => {
+      // NEW: save current definition comment before advancing
+      if ($defComment) defComments[qIndex] = $defComment.value;
+
+      qIndex += 1;
+      startQuestion();
+    }, delayAfterRevealMs);
+  } else {
+    $restart.style.visibility = "visible";
+  }
+}
+
+function handlePick(key){
+  if (locked) return;
+  selected = key;
+  // no immediate visual change until lock (keeps behavior)
+}
+
+function renderOptions(){
+  const act = active();
+  $opts.innerHTML = "";
+  /** @type {OptionKey[]} */
+  (["A","B","C","D"]).forEach((k) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "option";
+    btn.setAttribute("data-key", k);
+    btn.setAttribute("aria-disabled", locked ? "true" : "false");
+    btn.addEventListener("click", () => handlePick(k));
+
+    // badge
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = `${k}.`;
+
+    // prompt + definition wrapper
+    const wrap = document.createElement("div");
+    wrap.className = "opt-text";
+
+    const prompt = document.createElement("span");
+    prompt.className = "opt-prompt";
+    prompt.textContent = `Prompt: define ${act.term}`;
+
+    const def = document.createElement("span");
+    def.className = "opt-def";
+    def.textContent = act.options[k];
+
+    wrap.appendChild(prompt);
+    wrap.appendChild(def);
+
+    // state styling (after locked)
+    if (locked && k === act.correct){
+      btn.classList.add("is-correct");
+      badge.classList.add("badge-correct");
+    }
+    const isWrongSel = locked && selected === k && k !== act.correct;
+    if (isWrongSel){
+      btn.classList.add("is-wrong");
+    }
+
+    btn.appendChild(badge);
+    btn.appendChild(wrap);
+    $opts.appendChild(btn);
+  });
+}
+
+function startQuestion(){
+  cancelAnimationFrame(rafId);
+  clearTimeout(advanceTimeoutId);
+
+  selected = null;
+  locked = false;
+  startedAt = Date.now();
+  now = startedAt;
+
+  $counter.textContent = `${humanIndex()} of ${totalQuestions}`;
+  $term.textContent = active().term;
+
+  // NEW: restore saved comment (if any) for this definition
+  if ($defComment) $defComment.value = defComments[qIndex] || "";
+
+  $reveal.hidden = true;
+  $revealLetter.textContent = active().correct;
+  $restart.style.visibility = "hidden";
+  renderOptions();
+
+  $bar.style.width = "100%";
+  rafId = requestAnimationFrame(tick);
+}
+
+function restart(){
+  qIndex = 0;
+  startQuestion();
+}
+
+// init
+startQuestion();
+
+  
+</script>
+
+</body>
+</html>
